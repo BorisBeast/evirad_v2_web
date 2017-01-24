@@ -1,0 +1,144 @@
+// Bootstrap
+@import "node_modules/bootstrap-sass/assets/stylesheets/bootstrap";
+
+[v-cloak] {
+  display: none;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+.wrap {
+  background-color: #f1f1f1;
+  min-height: 100%;
+  height: auto;
+  margin: 0 auto -61px;
+  padding: 50px 0 60px;
+}
+
+.footer {
+  height: 60px;
+  border-top: 1px solid #ddd;
+  background-color: #222;
+  color: #9d9d9d;
+}
+
+.footer > .footer-content {
+  padding: 7px 10px 0 10px;
+}
+
+#version {
+  text-align: center;
+}
+
+.sidebar {
+  padding-top: 20px;
+}
+
+.content {
+  background-color: white;
+  padding-top: 20px;
+  padding-bottom: 100px;
+}
+
+.lista {
+  position: relative;
+}
+
+.lista .list-group-item {
+  padding: 5px 15px;
+}
+
+.loader-overlay {  //napravi overlay preko teksta ispod
+  z-index: 10;
+  position: absolute;
+  left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.9);
+}
+
+.loader-width-limiter {  //postavlja sirinu na 50% parenta ili 100px (zavisi sta je manje)
+  position: relative;
+  top: 10px;
+  margin: 0 auto;
+  max-width: 100px;
+  width: 50%;
+}
+
+.loader-container {  //formira kvadrat dimenzija 100% sirine parenta (loader-width-limiter je to ogranicio na 100px)
+  position: relative;
+  width: 100%;
+  padding-bottom: 100%;   //100% sirine parenta iako se radi o padding-bottom !!
+}
+
+.loader {  //animacija dimenzija istih kao loader-container
+  position: absolute;
+  left: 0; top: 0; right: 0; bottom: 0;
+  border: 10px solid #000000;
+  border-radius: 50%;
+  border-top: 10px solid #ffffff;
+  -webkit-animation: spin 2s linear infinite;
+  animation: spin 1s linear infinite;
+}
+
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// On small screens, set height to 'auto' for sidenav and grid
+@media screen and (max-width: 767px) {
+  .sidebar {
+    height: auto;
+    padding: 15px;
+  }
+}
+
+/*body {
+  padding-top: 50px;
+}
+
+html {
+  background-color: #aaaaaa;
+}
+
+#app {
+  background-color: #f1f1f1;
+}
+
+[v-cloak] {
+  display: none;
+}
+
+.navbar {
+  margin-bottom: 0;
+  border-radius: 0;
+}
+
+.sidebar {
+  padding-top: 20px;
+  //background-color: #f1f1f1;
+  //height: 100%;
+}
+
+.content {
+  background-color: white;
+  padding-top: 20px;
+  padding-bottom: 100px;
+}
+
+// Set black background color, white text and some padding
+footer {
+  background-color: #555;
+  color: white;
+  padding: 15px;
+}
+
+
+*/
