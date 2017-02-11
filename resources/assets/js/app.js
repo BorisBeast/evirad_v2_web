@@ -13,6 +13,9 @@ require('./bootstrap');
  */
 
 Vue.component('sluzba-dialog', require('./components/SluzbaDialog.vue'));
+Vue.component('grupa-dialog', require('./components/GrupaDialog.vue'));
+Vue.component('datetime-picker', require('./components/DateTimePicker.vue'));
+Vue.component('loading-select', require('./components/LoadingSelect.vue'));
 
 const app = new Vue({
     el: '#app',
@@ -32,7 +35,12 @@ const app = new Vue({
         sluzbe: [],
         sluzbeLoading: false,
         selectedSluzba: '',
-        showSluzbaDialog: false
+        showSluzbaDialog: false,
+        grupe: [],
+        grupe2: [],
+        grupeLoading: false,
+        selectedGrupa: '',
+        showGrupaDialog: false,
     },
 
     computed: {
@@ -45,6 +53,24 @@ const app = new Vue({
                 return r1Ime.localeCompare(r2Ime);
             });
         },
+    },
+    
+    watch: {
+        selectedSluzba: function () {
+            if(this.selectedSluzba==-1) {
+                this.showSluzbaDialog = true;
+
+                setTimeout(function(){ this.selectedSluzba = ""; }.bind(this), 1);   //mora timeout jer u protivnom komponenta loading-select ne detektuje promjenu value
+            }
+        },
+
+        selectedGrupa: function () {
+            if(this.selectedGrupa==-1) {
+                this.showGrupaDialog = true;
+
+                setTimeout(function(){ this.selectedGrupa = ""; }.bind(this), 1);   //mora timeout jer u protivnom komponenta loading-select ne detektuje promjenu value
+            }
+        }
     },
 
     methods: {
@@ -85,6 +111,7 @@ const app = new Vue({
                     this.radnikDetailsTitle = this.radnikDetails.ime + " " + this.radnikDetails.prezime + " [" + this.radnikDetails.id + "]";
                     this.errors={};
                     this.selectedSluzba = this.radnikDetails.sluzba;
+                    this.selectedGrupa = this.radnikDetails.grupa;
                     this.detailsLoading = false;
                 }, (response) => {
                     console.log('error:' + response);
@@ -137,6 +164,12 @@ const app = new Vue({
             }, 'fast');
         },
 
+        noviRadnikClick: function () {
+            this.message = {};
+            this.noviRadnik();
+        },
+
+
         noviRadnik: function() {
             if (this.previousDetailsRequest) {
                 this.previousDetailsRequest.abort();
@@ -148,8 +181,8 @@ const app = new Vue({
             this.radnikDetailsTitle = "Novi radnik";
             this.karticaKod = '';
             this.errors = {};
-            this.message = {};
             this.selectedSluzba = "";
+            this.selectedGrupa = "";
         },
 
         karticaKodBlur: function () {
@@ -160,19 +193,13 @@ const app = new Vue({
             }
         },
 
-        sluzbaChanged: function (event) {
-            //if(event.target.value==-1) {
-            if(this.selectedSluzba==-1) {
-                this.showSluzbaDialog = true;
-                this.selectedSluzba = "";
-            }
-        },
-
         fetchSluzbe: function (select=null) {
             this.sluzbeLoading = true;
             this.$http.get('sluzbe')
                 .then((response) => {
-                    this.sluzbe = response.data;
+                    let sluzbe = response.data;
+                    sluzbe.splice(0,0,{id:-1, ime:"-- Nova sluzba --"});
+                    this.sluzbe = sluzbe;
                     this.sluzbeLoading = false;
                     if(select) this.selectedSluzba = select;
                 }, (response) => {
@@ -181,8 +208,59 @@ const app = new Vue({
                 });
         },
 
+        fetchGrupe: function (select=null) {
+            this.grupeLoading = true;
+            this.$http.get('grupe')
+                .then((response) => {
+                    let grupe = response.data;
+                    this.grupe = grupe.slice(0);  //duplikat grupa
+                    grupe.splice(0,0,{id:-1, ime:"-- Nova grupa --"});
+                    this.grupe2 = grupe;
+                    this.grupeLoading = false;
+                    if(select) this.selectedGrupa = select;
+                }, (response) => {
+                    console.log('error:' + response);
+                    this.grupeLoading = false;
+                });
+        },
+
         sluzbaCreated: function(sluzba) {
             this.fetchSluzbe(sluzba); //promijeni listu i selektuj novododatu sluzbu
+        },
+
+        grupaCreated: function(grupa) {
+            this.fetchGrupe(grupa); //promijeni listu i selektuj novododatu grupu
+        },
+
+        deleteRadnik: function () {
+            bootbox.confirm({
+                title: this.radnikDetailsTitle,
+                message: "Da li ste sigurni da želite da obrišete radnika?",
+                buttons: {
+                    confirm: {
+                        label: 'Obriši',
+                        className: 'btn-danger'
+                    },
+                    cancel: {
+                        label: 'Poništi',
+                        className: 'btn-default'
+                    }
+                },
+                callback: function (result) {
+                    if(result) {
+                        this.detailsLoading = true;
+
+                        this.$http.delete('radnici/' + this.radnikDetails.id).then((response) => {
+                            this.fetchList();
+                            this.noviRadnik();
+                            this.showMessage("success", response.data.message);
+                        }, (response) => {
+                            this.detailsLoading = false;
+                            this.showMessage("error", response.data.message);
+                        });
+                    }
+                }.bind(this)
+            });
         }
     },
 
@@ -190,6 +268,7 @@ const app = new Vue({
         this.fetchList();
         this.noviRadnik();
         this.fetchSluzbe();
+        this.fetchGrupe();
     }
 });
 

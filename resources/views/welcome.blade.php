@@ -64,10 +64,9 @@
                                 <div v-show="listLoading" class="loader-overlay"><div class="loader-width-limiter"><div class="loader-container"><div class="loader"></div></div></div></div>
                                 <input type="text" class="form-control" v-model="searchQuery"/>
                                 <div class="list-group">
-                                    {{--TODO: title se ne mijenja dinamicki u popoveru!!!--}}
                                     <a v-for="radnik in filteredRadnici" v-cloak data-toggle="popover"
                                        :class="'list-group-item' + ((radnik.id==radnikDetails.id)?' active':'')"
-                                       :title="radnik.ime + ' ' + radnik.prezime"
+                                       :data-original-title="radnik.ime + ' ' + radnik.prezime"
                                        :data-content="'Komentar: '+radnik.komentar + '</br></br>Kreiran: ' + radnik.created_at"
                                        href="#" @click.prevent="loadDetailsClick(radnik.id)"> @{{ radnik.prezime }} @{{ radnik.ime }}
                                     </a>
@@ -76,7 +75,7 @@
 
                             <div class="col-sm-9 forma">
                                 <div class="form-group">
-                                    <button class="btn btn-default" @click.prevent="noviRadnik()">Novi radnik</button>
+                                    <button class="btn btn-default" @click.prevent="noviRadnikClick()">Novi radnik</button>
                                 </div>
                                 <div v-cloak :class="'alert alert-dismissable alert-' + message.type" v-if="message.type">
                                     <a href="#" class="close" @click.prevent="message={}" aria-label="close">&times;</a>
@@ -102,31 +101,42 @@
                                         </div>
                                         <div :class="'form-group' + (errors.sluzba?' has-error':'')">
                                             <label class="control-label" for="sluzba">Sluzba:</label>
-                                            <select class="form-control" id="sluzba" name="sluzba" v-model="selectedSluzba" @change="sluzbaChanged">
-                                                <option value="" disabled hidden>-- Odaberi sluzbu --</option>
-                                                <option value="-1">-- Nova sluzba --</option>
-                                                <option v-for="sluzba in sluzbe" :value="sluzba.id">@{{ sluzba.ime }}</option>
-                                            </select>
+                                            <loading-select name="sluzba" v-model="selectedSluzba" :options="sluzbe" :loading="sluzbeLoading" class="form-control" id="sluzba" title="-- Odaberi sluzbu --"></loading-select>
                                             <span class="help-block" v-if="errors.sluzba">@{{ errors.sluzba[0] }}</span>
                                         </div>
                                         <sluzba-dialog v-if="showSluzbaDialog" @close="showSluzbaDialog = false" @ok="sluzbaCreated(arguments[0])">
                                         </sluzba-dialog>
 
+                                        <div :class="'form-group' + (errors.grupa?' has-error':'')">
+                                            <label class="control-label" for="grupa">Grupa:</label>
+                                            <loading-select name="grupa" v-model="selectedGrupa" :options="grupe2" :loading="grupeLoading" class="form-control" id="grupa" title="-- Odaberi grupu --"></loading-select>
+                                            <span class="help-block" v-if="errors.grupa">@{{ errors.grupa[0] }}</span>
+                                        </div>
+                                        <grupa-dialog v-if="showGrupaDialog" @close="showGrupaDialog = false" @ok="grupaCreated(arguments[0])" :grupe="grupe">
+                                        </grupa-dialog>
+
+                                        <h3>Kartice:</h3>
                                         <div id="kartice">
-                                            <h3>Kartice:</h3>
                                             <div class="form-group" v-for="(kartica,index) in radnikDetails.kartice" v-cloak>
                                                 <label class="control-label" :for="'kartice_'+index+'_kod'">Kod @{{ index+1 }}:</label>
-                                                <input type="text" class="form-control" :id="'kartice_'+index+'_kod'" :name="'kartice['+index+'][kod]'" v-model="kartica.kod">
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control" :id="'kartice_'+index+'_kod'" :name="'kartice['+index+'][kod]'" v-model="kartica.kod">
+                                                    <div class="input-group-btn">
+                                                        <button type="button" class="btn btn-default" @click.prevent="radnikDetails.kartice.splice(index,1)"><span class="glyphicon glyphicon-trash"></span></button>
+                                                    </div>
+                                                </div>
+
                                                 <input type="hidden" :name="'kartice['+index+'][id]'" :value="kartica.id">
                                             </div>
 
                                             <div class="form-group">
                                                 <label class="control-label" for="kartica_kod">Kod:</label>
-                                                <input type="text" class="form-control" id="kartica_kod" name="kartica_kod" v-model="karticaKod" @blur="karticaKodBlur">
+                                                <input type="text" class="form-control" id="kartica_kod" v-model="karticaKod" @blur="karticaKodBlur">
                                             </div>
                                         </div>
 
                                         <button type="submit" class="btn btn-default">Submit</button>
+                                        <button type="button" class="btn btn-default" v-if="radnikDetails.id" @click.prevent="deleteRadnik"><span class="glyphicon glyphicon-trash"></span></button>
                                     </form>
                                 </div>
                             </div>

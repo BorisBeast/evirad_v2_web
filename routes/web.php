@@ -12,8 +12,7 @@
 */
 
 use App\Kartica;
-use App\Radnik;
-use App\Sluzba;
+use App\Zona;
 
 Route::get('/', function () {
     return view('welcome');
@@ -26,6 +25,8 @@ Route::get('/radnici/{id}', 'RadnikController@show');
 Route::post('/radnici', 'RadnikController@store');
 
 Route::patch('/radnici/{id}', 'RadnikController@update');
+
+Route::delete('/radnici/{id}', 'RadnikController@destroy');
 
 
 
@@ -44,3 +45,17 @@ Route::get('/sluzbe', 'SluzbaController@index');
 Route::get('/sluzbe/{id}', 'SluzbaController@show');
 
 Route::post('/sluzbe', 'SluzbaController@store');
+
+
+
+Route::get('/grupe', 'GrupaController@index');
+
+Route::get('/grupe/{id}', 'GrupaController@show');
+
+Route::post('/grupe', 'GrupaController@store');
+
+
+
+Route::get('/zone', function() {
+   return Zona::all(['id', 'ime']);
+});

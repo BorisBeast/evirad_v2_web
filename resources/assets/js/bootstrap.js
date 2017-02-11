@@ -43,3 +43,10 @@ Vue.http.interceptors.push((request, next) => {
 //     broadcaster: 'pusher',
 //     key: 'your-pusher-key'
 // });
+
+window.moment = require('moment');
+require('imports?define=>false,exports=>false!eonasdan-bootstrap-datetimepicker');
+
+require('bootstrap-select');
+
+require('imports?define=>false,exports=>false,this=>window!bootbox');

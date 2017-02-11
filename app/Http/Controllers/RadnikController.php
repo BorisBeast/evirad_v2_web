@@ -41,11 +41,13 @@ class RadnikController extends Controller
         $this->validate($request,[
             'ime' => 'required_if:prezime,',
             'prezime' => 'required_if:ime,',
-            'sluzba' => 'required'   //TODO: dodaj i druge validacije!!!
+            'sluzba' => 'required',   //TODO: dodaj i druge validacije!!!
+            'grupa' => 'required'
         ],[
             'ime.required_if' => 'ime ili prezime su neophodni',
             'prezime.required_if' => 'ime ili prezime su neophodni',
-            'sluzba.required' => 'sluzba je neophodna'
+            'sluzba.required' => 'sluzba je neophodna',
+            'grupa.required' => 'grupa je neophodna'
         ]);
         $id=0;
 
@@ -80,18 +82,20 @@ class RadnikController extends Controller
         $this->validate($request,[
             'ime' => 'required_if:prezime,',
             'prezime' => 'required_if:ime,',
-            'sluzba' => 'required'   //TODO: dodaj i druge validacije!!!
+            'sluzba' => 'required',   //TODO: dodaj i druge validacije!!!
             //'kartice.*.kod' => 'required_unless:kartice.*.id,'
+            'grupa' => 'required'
         ]/*,[
             'required_if' => ':attribute je neophodno ako :other nije upisano',
         ]*/,[
             'ime.required_if' => 'ime ili prezime su neophodni',
             'prezime.required_if' => 'ime ili prezime su neophodni',
-            'sluzba.required' => 'sluzba je neophodna'
+            'sluzba.required' => 'sluzba je neophodna',
             //'kartice.*.kod.required_unless' => 'kod ne smije biti prazan'
+            'grupa.required' => 'grupa je neophodna'
         ]);
 
-        $radnik = Radnik::find($id);
+        $radnik = Radnik::with('kartice')->find($id);
         if(!$radnik) return response(json_encode(['message'=>'Not Found!']), 404)->header('Content-Type', 'application/json');
 
         DB::beginTransaction();
@@ -100,6 +104,25 @@ class RadnikController extends Controller
 
         $karticeArray = $request->input('kartice');
         if(is_null($karticeArray)) $karticeArray=[];
+
+        foreach($radnik->kartice as $karticaModel) {
+            $found = false;
+            foreach ($karticeArray as $kartica)
+            {
+                if($kartica['id'] && intval($kartica['id'])==$karticaModel->id) {
+                    if($kartica['kod'] != '') {
+                        $success = $success && $karticaModel->update($kartica);
+                        //TODO: touch parent timestamps??
+                    }
+
+                    $found = true;
+                    break;
+                }
+            }
+            if(!$found)
+                $success = $success && $karticaModel->delete();
+        }
+
         $karticeModels = [];
 
         foreach ($karticeArray as $kartica)
@@ -107,14 +130,14 @@ class RadnikController extends Controller
             if(!$kartica['id'] && ($kartica['kod'] != '')) {
                 $karticeModels[] = new Kartica($kartica);
             }
-            else if($kartica['kod'] != '')
+            /*else if($kartica['kod'] != '')
             {
                 $karticaModel = Kartica::find($kartica['id']);
                 //TODO: postoji li kartica?
                 //TODO: pripada li ovom radniku?
                 $success = $success && $karticaModel->update($kartica);
                 //TODO: touch parent timestamps??
-            }
+            }*/
         }
 
         $radnik->kartice()->saveMany($karticeModels);
@@ -135,6 +158,21 @@ class RadnikController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $radnik = Radnik::with('kartice')->find($id);
+        if(!$radnik) return response(json_encode(['message'=>'Not Found!']), 404)->header('Content-Type', 'application/json');
+
+        DB::beginTransaction();
+
+        $success = $radnik->delete();
+
+        foreach($radnik->kartice as $kartica)
+            $success = $success && $kartica->delete();
+
+        //TODO: rollback u slucaju greske
+
+        DB::commit();
+
+        if($success) return response(json_encode(['message'=>'Success!']), 200)->header('Content-Type', 'application/json');
+        else return response(json_encode(['message'=>'Failed!']), 500)->header('Content-Type', 'application/json');
     }
 }
